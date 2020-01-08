@@ -56,9 +56,13 @@ namespace WmKazTest.Core.Services
                     observation.Numbers = new[] { "1110111", "1110111" };
                     await UnitOfWork.ObservationRepository.Add(Mapper.Map<Data.Model.Observation>(observation));
                     await UnitOfWork.Save();
+
+                    var missingSections = existingSequence.Missing;
+                    if (existingSequence.Observations.Count - 1 < 10)
+                        missingSections[0] = "0000000";
                     return new Response
                     {
-                        Missing = existingSequence.Missing,
+                        Missing = missingSections,
                         Start = new[] { existingSequence.Observations.Count - 1 }
                     };
                 }
