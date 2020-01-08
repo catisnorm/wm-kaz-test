@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using WmKazTest.Core.Model;
@@ -12,7 +11,7 @@ namespace WmKazTest.Controllers
     [Route("[controller]")]
     public class ObservationController : ControllerBase
     {
-        private ObservationService _observationService;
+        private readonly ObservationService _observationService;
 
         public ObservationController(ObservationService observationService)
         {

@@ -27,8 +27,9 @@ namespace WmKazTest.Core.Services
                     throw new ArgumentException("Invalid color. Acceptable values: 'green' or 'red'.",
                         nameof(observation.Color));
 
-                if (observation.Numbers.Any(str => str.Length != 7) || observation.Numbers.Any(str =>
-                        str.Except(new[] { '0', '1' }).Any()))
+                if (observation.Color.Equals("green") &&
+                    (observation.Numbers.Any(str => str.Length != 7) || observation.Numbers.Any(str =>
+                         str.Except(new[] { '0', '1' }).Any())))
                     throw new ArgumentException(ErrorMessage.InvalidNumberFormat, nameof(observation.Numbers));
 
                 var existingSequence = await UnitOfWork.SequenceRepository.Get(observation.SequenceId);
@@ -41,11 +42,26 @@ namespace WmKazTest.Core.Services
                 if (existingSequence.Observations.Any(ob => ob.Color.ToLower().Equals("red")))
                     throw new InvalidOperationException(ErrorMessage.RedObservationShouldBeLast);
 
-                if (observation.Numbers.Length != 2 ||
-                    existingSequence.Observations.Any(ob => ob.Numbers.SequenceEqual(observation.Numbers)))
+                if (observation.Color.Equals("green") &&
+                    (observation.Numbers.Length != 2 || existingSequence.Observations.Any(ob =>
+                         ob.Numbers.SequenceEqual(observation.Numbers))))
                     throw new ArgumentException(ErrorMessage.NoSolutionsFound);
 
                 #endregion
+
+                if (observation.Color.Equals("red"))
+                {
+                    observation.ReadableValue = 0;
+                    observation.PossibleReadableValues = new[] { 0 };
+                    observation.Numbers = new[] { "1110111", "1110111" };
+                    await UnitOfWork.ObservationRepository.Add(Mapper.Map<Data.Model.Observation>(observation));
+                    await UnitOfWork.Save();
+                    return new Response
+                    {
+                        Missing = existingSequence.Missing,
+                        Start = new[] { existingSequence.Observations.Count - 1 }
+                    };
+                }
 
                 observation.ReadableValue = TruthTable.GetHumanReadableValue(observation.Numbers);
                 observation.PossibleReadableValues = TruthTable.GetPossibleNumbers(observation.Numbers).ToArray();
@@ -67,6 +83,7 @@ namespace WmKazTest.Core.Services
                 {
                     existingSequence.PossibleStart = currentPossibleNumbers.ToArray();
                 }
+
                 existingSequence.Missing = missing;
                 await UpdateSequence(existingSequence);
 
