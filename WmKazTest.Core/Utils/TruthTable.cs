@@ -37,9 +37,13 @@ namespace WmKazTest.Core.Utils
             }
         }
 
-        public static int[] GetPossibleDigits()
+        public static IEnumerable<int> GetPossibleDigits(string sections)
         {
-            throw new NotImplementedException();
+            var workingSections = sections.Select((c, i) => c == '1' ? i : -1).Where(index => index > -1);
+            return from number in ValidNumbers
+                let withIndex = number.Select((c, i) => new { c, i })
+                where withIndex.Count(sec => workingSections.Contains(sec.i) && sec.c == '1') == workingSections.Count()
+                select GetDigit(number);
         }
     }
 }
