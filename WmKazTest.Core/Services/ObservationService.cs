@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
 using WmKazTest.Core.Model;
@@ -40,7 +41,7 @@ namespace WmKazTest.Core.Services
                 if (existingSequence.Observations.Any(ob => ob.Color.ToLower().Equals("red")))
                     throw new InvalidOperationException(ErrorMessage.RedObservationShouldBeLast);
 
-                if (observation.Numbers.Length < 2 ||
+                if (observation.Numbers.Length != 2 ||
                     existingSequence.Observations.Any(ob => ob.Numbers.SequenceEqual(observation.Numbers)))
                     throw new ArgumentException(ErrorMessage.NoSolutionsFound);
 
@@ -58,17 +59,20 @@ namespace WmKazTest.Core.Services
 
                 await UnitOfWork.Save();
 
-                var start = GetPossibleStart(observation.Numbers);
-                var missing = GetMissingSections();
-                
-                existingSequence.PossibleStart = start;
+                var currentPossibleNumbers = TruthTable.GetPossibleNumbers(observation.Numbers);
+                var missing = GetMissingSections(existingSequence.WorkingSections);
+
+                if (!existingSequence.Observations.Any())
+                {
+                    existingSequence.PossibleStart = currentPossibleNumbers.ToArray();
+                }
                 existingSequence.Missing = missing;
                 await UpdateSequence(existingSequence);
 
                 return new Response
                 {
                     Missing = missing,
-                    Start = start
+                    Start = existingSequence.PossibleStart
                 };
             }
             catch (Exception e)
@@ -78,22 +82,24 @@ namespace WmKazTest.Core.Services
             }
         }
 
-        private static string[] GetMissingSections()
+        private static string[] GetMissingSections(IEnumerable<Data.Model.WorkingSection> working)
         {
-            return new[] { "0000000", "0000000" };
-        }
-
-        private static int[] GetPossibleStart(IEnumerable<string> numbers) // TODO: complete method
-        {
-            var possibleNumber = new List<int>();
-            var arrays = numbers.Select(TruthTable.GetPossibleDigits).ToList();
-            var longest = arrays.Max(arr => arr.Count());
-            for (var i = 0; i < longest; i++)
+            var all = new[] { 0, 1, 2, 3, 4, 5, 6 };
+            var notWorking = working.GroupBy(ws => ws.DisplayIndex)
+                .Select(group => all.Except(group.Select(ws => ws.Section)).ToArray());
+            var strings = new List<string>();
+            foreach (var sections in notWorking)
             {
-                var index = i;
-                possibleNumber.Add(int.Parse(string.Join("", arrays.Select(arr => arr.ElementAtOrDefault(index)))));
+                var str = new StringBuilder("0000000");
+                foreach (var section in sections)
+                {
+                    str[section] = '1';
+                }
+
+                strings.Add(str.ToString());
             }
-            return possibleNumber.ToArray();
+
+            return strings.ToArray();
         }
 
         private async Task UpdateSequence(Data.Model.Sequence sequence)

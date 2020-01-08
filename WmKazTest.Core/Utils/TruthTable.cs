@@ -45,5 +45,13 @@ namespace WmKazTest.Core.Utils
                 where withIndex.Count(sec => workingSections.Contains(sec.i) && sec.c == '1') == workingSections.Count()
                 select GetDigit(number);
         }
+
+        public static IEnumerable<int> GetPossibleNumbers(IEnumerable<string> numbers)
+        {
+            var arrays = numbers.Select(GetPossibleDigits).ToList();
+            return from first in arrays.First()
+                from second in arrays.Skip(1).First()
+                select int.Parse(first + "" + second);
+        }
     }
 }
