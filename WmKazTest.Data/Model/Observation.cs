@@ -9,5 +9,6 @@ namespace WmKazTest.Data.Model
         public string[] Numbers { get; set; }
         public int? ReadableValue { get; set; }
         public Guid SequenceId { get; set; }
+        public virtual Sequence Sequence { get; set; }
     }
 }

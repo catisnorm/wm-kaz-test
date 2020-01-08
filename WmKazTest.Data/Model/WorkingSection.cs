@@ -11,5 +11,6 @@ namespace WmKazTest.Data.Model
         [Range(0, 6)]
         public int Section { get; set; }
         public Guid SequenceId { get; set; }
+        public virtual Sequence Sequence { get; set; }
     }
 }

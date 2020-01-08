@@ -10,7 +10,7 @@ using WmKazTest.Data;
 namespace WmKazTest.Data.Migrations
 {
     [DbContext(typeof(ObservationDataContext))]
-    [Migration("20200107203237_Init")]
+    [Migration("20200108010247_Init")]
     partial class Init
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -41,6 +41,8 @@ namespace WmKazTest.Data.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("SequenceId");
 
                     b.ToTable("Observations");
                 });
@@ -80,7 +82,27 @@ namespace WmKazTest.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("SequenceId");
+
                     b.ToTable("WorkingSections");
+                });
+
+            modelBuilder.Entity("WmKazTest.Data.Model.Observation", b =>
+                {
+                    b.HasOne("WmKazTest.Data.Model.Sequence", "Sequence")
+                        .WithMany("Observations")
+                        .HasForeignKey("SequenceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("WmKazTest.Data.Model.WorkingSection", b =>
+                {
+                    b.HasOne("WmKazTest.Data.Model.Sequence", "Sequence")
+                        .WithMany("WorkingSections")
+                        .HasForeignKey("SequenceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

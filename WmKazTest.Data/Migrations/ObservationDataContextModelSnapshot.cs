@@ -40,6 +40,8 @@ namespace WmKazTest.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("SequenceId");
+
                     b.ToTable("Observations");
                 });
 
@@ -78,7 +80,27 @@ namespace WmKazTest.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("SequenceId");
+
                     b.ToTable("WorkingSections");
+                });
+
+            modelBuilder.Entity("WmKazTest.Data.Model.Observation", b =>
+                {
+                    b.HasOne("WmKazTest.Data.Model.Sequence", "Sequence")
+                        .WithMany("Observations")
+                        .HasForeignKey("SequenceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("WmKazTest.Data.Model.WorkingSection", b =>
+                {
+                    b.HasOne("WmKazTest.Data.Model.Sequence", "Sequence")
+                        .WithMany("WorkingSections")
+                        .HasForeignKey("SequenceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

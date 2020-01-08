@@ -9,6 +9,7 @@ namespace WmKazTest.Data.Model
         public int[] PossibleStart { get; set; }
         public string[] Missing { get; set; }
 
-        public ICollection<Observation> Observations { get; set; }
+        public virtual ICollection<Observation> Observations { get; set; }
+        public virtual ICollection<WorkingSection> WorkingSections { get; set; }
     }
 }

@@ -26,7 +26,7 @@ namespace WmKazTest
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddDbContext<ObservationDataContext>(builder =>
-                builder.UseSqlServer(Configuration.GetConnectionString("ObservationDb")));
+                builder.UseLazyLoadingProxies().UseSqlServer(Configuration.GetConnectionString("ObservationDb")));
             services.AddControllers();
 
             var assemblies = AppDomain.CurrentDomain.GetAssemblies()
