@@ -48,6 +48,7 @@ namespace WmKazTest.Core.Services
                 #endregion
 
                 observation.ReadableValue = TruthTable.GetHumanReadableValue(observation.Numbers);
+                observation.PossibleReadableValues = TruthTable.GetPossibleNumbers(observation.Numbers).ToArray();
                 await UnitOfWork.ObservationRepository.Add(Mapper.Map<Data.Model.Observation>(observation));
 
                 foreach (var (number, display) in observation.Numbers.Select((num, i) => (num, i)))
@@ -62,7 +63,7 @@ namespace WmKazTest.Core.Services
                 var currentPossibleNumbers = TruthTable.GetPossibleNumbers(observation.Numbers);
                 var missing = GetMissingSections(existingSequence.WorkingSections);
 
-                if (!existingSequence.Observations.Any())
+                if (existingSequence.Observations.Count <= 1)
                 {
                     existingSequence.PossibleStart = currentPossibleNumbers.ToArray();
                 }

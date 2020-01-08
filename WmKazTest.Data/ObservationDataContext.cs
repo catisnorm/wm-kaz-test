@@ -24,6 +24,11 @@ namespace WmKazTest.Data
                 .Metadata.SetValueComparer(new ValueComparer<string[]>(
                     (s, s1) => s.SequenceEqual(s1),
                     s => s.GetHashCode()));
+            modelBuilder.Entity<Observation>().Property(observation => observation.PossibleReadableValues)
+                .HasConversion(arr => string.Join(",", arr),
+                    s => s.Split(",", StringSplitOptions.RemoveEmptyEntries).Select(int.Parse).ToArray())
+                .Metadata.SetValueComparer(new ValueComparer<int[]>((ints, ints1) => ints.SequenceEqual(ints1),
+                    ints => ints.GetHashCode()));
             modelBuilder.Entity<Observation>().Property(observation => observation.ReadableValue)
                 .HasConversion(val => val < 0 ? null : val,
                     val => val);

@@ -32,6 +32,9 @@ namespace WmKazTest.Data.Migrations
                     b.Property<string>("Numbers")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("PossibleReadableValues")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int?>("ReadableValue")
                         .HasColumnType("int");
 

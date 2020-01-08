@@ -10,7 +10,7 @@ using WmKazTest.Data;
 namespace WmKazTest.Data.Migrations
 {
     [DbContext(typeof(ObservationDataContext))]
-    [Migration("20200108010247_Init")]
+    [Migration("20200108164752_Init")]
     partial class Init
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -32,6 +32,9 @@ namespace WmKazTest.Data.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Numbers")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PossibleReadableValues")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("ReadableValue")

@@ -29,6 +29,7 @@ namespace WmKazTest.Data.Migrations
                     Color = table.Column<string>(nullable: true),
                     Numbers = table.Column<string>(nullable: true),
                     ReadableValue = table.Column<int>(nullable: true),
+                    PossibleReadableValues = table.Column<string>(nullable: true),
                     SequenceId = table.Column<Guid>(nullable: false)
                 },
                 constraints: table =>
