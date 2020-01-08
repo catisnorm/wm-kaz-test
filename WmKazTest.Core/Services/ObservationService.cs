@@ -21,13 +21,13 @@ namespace WmKazTest.Core.Services
             {
                 #region Validation
 
-                if (string.IsNullOrWhiteSpace(observation.Color) || !observation.Color.Equals("red") ||
-                    !observation.Color.Equals("green"))
+                if (string.IsNullOrWhiteSpace(observation.Color) ||
+                    !new[] { "green", "red" }.Contains(observation.Color))
                     throw new ArgumentException("Invalid color. Acceptable values: 'green' or 'red'.",
                         nameof(observation.Color));
 
-                if (observation.Numbers.Any(str => str.Length != 7) || observation.Numbers.All(str =>
-                        !str.Except(new[] { '0', '1' }).Any()))
+                if (observation.Numbers.Any(str => str.Length != 7) || observation.Numbers.Any(str =>
+                        str.Except(new[] { '0', '1' }).Any()))
                     throw new ArgumentException(ErrorMessage.InvalidNumberFormat, nameof(observation.Numbers));
 
                 var existingSequence = await UnitOfWork.SequenceRepository.Get(observation.SequenceId);
@@ -53,25 +53,17 @@ namespace WmKazTest.Core.Services
                 {
                     var workingSections =
                         number.Select((c, section) => c == '1' ? section : -1).Where(index => index > -1);
-                    await SetWorkingSections(display, observation.SequenceId, workingSections);
+                    await SetWorkingSections(display, workingSections, existingSequence);
                 }
 
                 await UnitOfWork.Save();
 
-                var start = new int[] { };
-                var missing = new[] { "0000000", "0000000" };
-                if (observation.Numbers.Select(TruthTable.GetDigit).All(i => i > -1))
-                {
-                    start[0] = TruthTable.GetHumanReadableValue(observation.Numbers);
-                    existingSequence.PossibleStart = start;
-                    existingSequence.Missing = missing;
-                    await UpdateSequence(existingSequence);
-                }
-                else
-                {
-                    start = GetPossibleStart();
-                    missing = GetMissingSections();
-                }
+                var start = GetPossibleStart(observation.Numbers);
+                var missing = GetMissingSections();
+                
+                existingSequence.PossibleStart = start;
+                existingSequence.Missing = missing;
+                await UpdateSequence(existingSequence);
 
                 return new Response
                 {
@@ -86,14 +78,22 @@ namespace WmKazTest.Core.Services
             }
         }
 
-        private string[] GetMissingSections()
+        private static string[] GetMissingSections()
         {
-            throw new NotImplementedException();
+            return new[] { "0000000", "0000000" };
         }
 
-        private int[] GetPossibleStart()
+        private static int[] GetPossibleStart(IEnumerable<string> numbers) // TODO: complete method
         {
-            throw new NotImplementedException();
+            var possibleNumber = new List<int>();
+            var arrays = numbers.Select(TruthTable.GetPossibleDigits).ToList();
+            var longest = arrays.Max(arr => arr.Count());
+            for (var i = 0; i < longest; i++)
+            {
+                var index = i;
+                possibleNumber.Add(int.Parse(string.Join("", arrays.Select(arr => arr.ElementAtOrDefault(index)))));
+            }
+            return possibleNumber.ToArray();
         }
 
         private async Task UpdateSequence(Data.Model.Sequence sequence)
@@ -102,26 +102,19 @@ namespace WmKazTest.Core.Services
             await UnitOfWork.Save();
         }
 
-        private async Task SetWorkingSections(int display, Guid sequenceId, IEnumerable<int> workingSections)
+        private async Task SetWorkingSections(int display, IEnumerable<int> workingSections,
+            Data.Model.Sequence existingSquence)
         {
-            foreach (var section in workingSections)
+            foreach (var section in workingSections.Except(existingSquence.WorkingSections
+                .Where(ws => ws.DisplayIndex == display).Select(ws => ws.Section)))
             {
-                if (await SectionWorks(sequenceId, display, section)) continue;
                 await UnitOfWork.WorkingSectionRepository.Add(new Data.Model.WorkingSection
                 {
                     DisplayIndex = display,
                     Section = section,
-                    SequenceId = sequenceId
+                    SequenceId = existingSquence.Id
                 });
             }
-        }
-
-        private async Task<bool> SectionWorks(Guid sequenceId, int displayIndex, int section)
-        {
-            return (await UnitOfWork.WorkingSectionRepository.Get(
-                ws => ws.SequenceId == sequenceId
-                      && ws.DisplayIndex == displayIndex && ws.Section == section
-            )).Any();
         }
     }
 }
