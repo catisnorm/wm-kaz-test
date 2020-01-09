@@ -6,7 +6,7 @@ namespace WmKazTest.Core.Utils
 {
     public static class TruthTable
     {
-        public static string[] ValidNumbers => new[]
+        private static string[] ValidNumbers => new[]
         {
             "1110111",
             "0010010",
@@ -20,9 +20,18 @@ namespace WmKazTest.Core.Utils
             "1111011"
         };
 
-        public static int GetDigit(string sections)
+        private static int GetDigit(string sections)
         {
             return Array.IndexOf(ValidNumbers, sections);
+        }
+
+        private static IEnumerable<int> GetPossibleDigits(string sections)
+        {
+            var workingSections = sections.Select((c, i) => c == '1' ? i : -1).Where(index => index > -1);
+            return from number in ValidNumbers
+                let withIndex = number.Select((c, i) => new { c, i })
+                where withIndex.Count(sec => workingSections.Contains(sec.i) && sec.c == '1') == workingSections.Count()
+                select GetDigit(number);
         }
 
         public static int GetHumanReadableValue(IEnumerable<string> numbers)
@@ -35,15 +44,6 @@ namespace WmKazTest.Core.Utils
             {
                 return -1;
             }
-        }
-
-        public static IEnumerable<int> GetPossibleDigits(string sections)
-        {
-            var workingSections = sections.Select((c, i) => c == '1' ? i : -1).Where(index => index > -1);
-            return from number in ValidNumbers
-                let withIndex = number.Select((c, i) => new { c, i })
-                where withIndex.Count(sec => workingSections.Contains(sec.i) && sec.c == '1') == workingSections.Count()
-                select GetDigit(number);
         }
 
         public static IEnumerable<int> GetPossibleNumbers(IEnumerable<string> numbers)
