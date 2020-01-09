@@ -87,6 +87,11 @@ namespace WmKazTest.Core.Services
                 {
                     existingSequence.PossibleStart = currentPossibleNumbers.ToArray();
                 }
+                else
+                {
+                    existingSequence.PossibleStart = existingSequence.PossibleStart
+                        .Where(start => start > existingSequence.Observations.Count).ToArray();
+                }
 
                 existingSequence.Missing = missing;
                 await UpdateSequence(existingSequence);
