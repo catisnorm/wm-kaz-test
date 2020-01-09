@@ -15,6 +15,7 @@ namespace WmKazTest.Tests
         [InlineData("11a1111", "0000111")]
         [InlineData("11111110", "11111")]
         [InlineData("00011101")]
+        [InlineData("00011101", "00011101", "00011101")]
         public async void AddObservation_ThrowsArgumentExceptionIfNumbersAreInvalid(params string[] numbers)
         {
             var uow = new Mock<IUnitOfWork>();
