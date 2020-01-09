@@ -51,24 +51,16 @@ namespace WmKazTest.Core.Services
 
                 if (observation.Color.Equals("red"))
                 {
+                    observation.Numbers = new[] { "1110111", "1110111" };
                     observation.ReadableValue = 0;
                     observation.PossibleReadableValues = new[] { 0 };
-                    observation.Numbers = new[] { "1110111", "1110111" };
-                    await UnitOfWork.ObservationRepository.Add(Mapper.Map<Data.Model.Observation>(observation));
-                    await UnitOfWork.Save();
-
-                    var missingSections = existingSequence.Missing;
-                    if (existingSequence.Observations.Count - 1 < 10)
-                        missingSections[0] = "0000000";
-                    return new Response
-                    {
-                        Missing = missingSections,
-                        Start = new[] { existingSequence.Observations.Count - 1 }
-                    };
+                }
+                else
+                {
+                    observation.ReadableValue = TruthTable.GetHumanReadableValue(observation.Numbers);
+                    observation.PossibleReadableValues = TruthTable.GetPossibleNumbers(observation.Numbers).ToArray();
                 }
 
-                observation.ReadableValue = TruthTable.GetHumanReadableValue(observation.Numbers);
-                observation.PossibleReadableValues = TruthTable.GetPossibleNumbers(observation.Numbers).ToArray();
                 await UnitOfWork.ObservationRepository.Add(Mapper.Map<Data.Model.Observation>(observation));
 
                 foreach (var (number, display) in observation.Numbers.Select((num, i) => (num, i)))
@@ -81,7 +73,10 @@ namespace WmKazTest.Core.Services
                 await UnitOfWork.Save();
 
                 var missing = GetMissingSections(existingSequence.WorkingSections);
-                existingSequence.PossibleStart = GetPossibleStart(existingSequence.Observations);
+                var possibleStart = GetPossibleStart(existingSequence.Observations);
+                if (possibleStart.Length == 0)
+                    throw new InvalidOperationException(ErrorMessage.NoSolutionsFound);
+                existingSequence.PossibleStart = possibleStart;
                 existingSequence.Missing = missing;
                 UnitOfWork.SequenceRepository.Update(existingSequence);
                 await UnitOfWork.Save();
