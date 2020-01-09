@@ -80,21 +80,11 @@ namespace WmKazTest.Core.Services
 
                 await UnitOfWork.Save();
 
-                var currentPossibleNumbers = TruthTable.GetPossibleNumbers(observation.Numbers);
                 var missing = GetMissingSections(existingSequence.WorkingSections);
-
-                if (existingSequence.Observations.Count <= 1)
-                {
-                    existingSequence.PossibleStart = currentPossibleNumbers.ToArray();
-                }
-                else
-                {
-                    existingSequence.PossibleStart = existingSequence.PossibleStart
-                        .Where(start => start > existingSequence.Observations.Count).ToArray();
-                }
-
+                existingSequence.PossibleStart = GetPossibleStart(existingSequence.Observations);
                 existingSequence.Missing = missing;
-                await UpdateSequence(existingSequence);
+                UnitOfWork.SequenceRepository.Update(existingSequence);
+                await UnitOfWork.Save();
 
                 return new Response
                 {
@@ -107,6 +97,31 @@ namespace WmKazTest.Core.Services
                 Console.WriteLine(e);
                 throw;
             }
+        }
+
+        private static int[] GetPossibleStart(IEnumerable<Data.Model.Observation> existingSequenceObservations)
+        {
+            var numbers = existingSequenceObservations.Select(o => o.PossibleReadableValues).ToList();
+            var length = numbers.Count;
+
+            var sequences = new List<int[]>();
+            var firstArr = numbers.First();
+            foreach (var val in firstArr)
+            {
+                var localSequence = new List<int>();
+                for (var i = 0; i < length; i++)
+                {
+                    var currentSequence = numbers.ElementAt(i);
+                    if (currentSequence.Contains(val - i))
+                        localSequence.Add(currentSequence.First(item => item == val - i));
+                    else
+                        break;
+                }
+
+                sequences.Add(localSequence.ToArray());
+            }
+
+            return sequences.Where(seq => seq.Length == length).Select(s => s.First()).ToArray();
         }
 
         private static string[] GetMissingSections(IEnumerable<Data.Model.WorkingSection> working)
@@ -127,12 +142,6 @@ namespace WmKazTest.Core.Services
             }
 
             return strings.ToArray();
-        }
-
-        private async Task UpdateSequence(Data.Model.Sequence sequence)
-        {
-            UnitOfWork.SequenceRepository.Update(sequence);
-            await UnitOfWork.Save();
         }
 
         private async Task SetWorkingSections(int display, IEnumerable<int> workingSections,
