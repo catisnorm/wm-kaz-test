@@ -122,8 +122,19 @@ namespace WmKazTest.Core.Services
         private static string[] GetMissingSections(IEnumerable<Data.Model.WorkingSection> working)
         {
             var all = new[] { 0, 1, 2, 3, 4, 5, 6 };
-            var notWorking = working.GroupBy(ws => ws.DisplayIndex)
-                .Select(group => all.Except(group.Select(ws => ws.Section)).ToArray());
+            var workingList = working.ToList();
+            var notWorking = workingList.GroupBy(ws => ws.DisplayIndex)
+                .Select(group => all.Except(group.Select(ws => ws.Section)).ToArray()).ToList();
+            if (notWorking.Count < 2)
+            {
+                var displays = new[] { 0, 1 };
+                var notExistingDisplays = displays.Except(workingList.Select(ws => ws.DisplayIndex));
+                foreach (var disp in notExistingDisplays)
+                {
+                    notWorking.Insert(disp, all);
+                }
+            }
+
             var strings = new List<string>();
             foreach (var sections in notWorking)
             {
